@@ -1,0 +1,204 @@
+﻿######################################################################################################################
+#                                                                                                                    #
+#										Made by Zeroual Aymene , 02/08/2020 .                                        #
+#                                                                                                                    #
+######################################################################################################################
+
+Problem : I make games but every one can view/edit game assets ( Visual / Sounds ) files !!
+
+Solution:
+
+	Project Name : Bank All Files extenction pipelane (.BAF).
+
+	Structure ( VERSION = 1 ) :
+
+		• HEADER (12 bytes) :
+
+			- BANK_TYPE (2 bytes ASCII ) ( Type of the bank) : 
+
+				_ TX : Textures or Visual assets overall
+
+				_ SE : Small Sound Effects (.WAV files)
+
+				_ SG : Songs files / Large Sound files (.mp3 / .ogg)
+
+				_ CF : Config files / TXT files
+
+			- BANK_VERSION (1 byte unsigned byte) ( Version of the bank )
+
+			- DIRECTORIES_NUM ( 4 bytes unsigned int ) ( Number of files )
+
+			- DIRECTORY_POINTER ( 4 bytes unsigned int ) ( Pointer to Directory position)
+
+		• CHUNK (N/A size) :
+
+			- Added files CHUNK on bytes will be find hir but can only accesed by usinng Directories ,
+
+				 Or you will get bunch of bytes that represent nothing !
+
+		• DIRECTORY (16 bytes) :
+
+			- CHUNK_POINTER ( 4 bytes unsigned int ) ( Pointer to content position )
+
+			- CHUNK_SIZE ( 4 bytes unsgined int ) ( Size of the CHUNK in bytes )
+
+			- CHUNK_NAME ( 8 bytes ASCII ) ( Must ends with '\0' if less then 8 bytes)
+
+		Notes:
+
+			- MAX possible files : 2^(15)-1 = 32,767 file
+
+			- Empety Bank size : 10 bytes
+
+	Algorithms :
+
+		• GLOBALS :
+
+			- Long ALL_CHUNK_SIZE
+
+			- DIRECTORY dir_arr
+			
+		• Read DIRECTORIES( Must do first ):
+
+			- Open The Bank File
+
+			- Read first 10 bytes to header struct 
+
+			- Check if bank is legit ( Version / Type )
+
+			- Alloc array of DIRECTORY ( dir_arr[ sizeof(DIRECTORY) * DIRECTORIES_NUM ] )
+
+			- LOOP(i = 0 ,DIRECTORIES_NUM) :
+
+				_ Seek to pos : DIRECTORY_POINTER + (i * sizeof(DIRECTORY)) then read to dir_arr[i]
+
+				_ Calc : ALL_CHUNK_SIZE += dir_arr[i].CHUNK_SIZE
+
+		• Read CHUNK :
+
+			◘ VARS : dir_needed , CHUNK_buffer
+
+			- Get CHUNK_name								### AS AN ARGEMENT IN A FUNCTION
+
+			- Fetch in dir_arr for ( dir_arr[i].CHUNK_NAME == CHUNK_name) to dir_needed
+
+			- if dir_needed exists Open The Bank File , else go out and tell the user if he is dreaming !!
+
+			- Alloc CHUNK_buffer[dir_needed.CHUNK_SIZE]
+
+			- Seek/Read from pos : dir_needed.CHUNK_POINTER to pos : dir_needed.CHUNK_POINTER + dir_needed.CHUNK_SIZE to 
+																										CHUNK_buffer
+
+			- Close file and store CHUNK_buffer where ever u want , even your closet !!
+			out_
+		• Write :
+
+			- Add ( Don't forget excpetions handling !!!!) :
+
+				◘ VARS : header , dir_tmp , dir_tmp_buffer
+
+				_ Get CHUNK_buffer, Date_name (less then 8 bytes) , CHUNK_size ### AS AN ARGEMENT IN A FUNCTION
+
+				_ Open The Bank File
+
+				_ Read first 10 bytes to header struct 
+
+				_ Check if bank is legit ( Version / Type )
+
+				_ Alloc dir_tmp:
+
+					♠ Set dir_tmp.CHUNK_POINTER : sizeof(HEADER) + ALL_CHUNK_SIZE , dir_tmp.CHUNK_NAME = CHUNK_name 
+														, dir_tmp.CHUNK_SIZE = CHUNK_size
+
+				_ Seek to pos : DIRECTORY_POINTER
+
+				_ Read all DIRECTORIES to a char dir_tmp_buffer[ sizeof(DIRECTORY) *  (DIRECTORIES_NUM + 1)]
+
+				_ Append dir_tmp_buffer to dir_tmp
+
+				_ Seek/Write CHUNK_buffer in dir_tmp.CHUNK_POINTER
+
+				_ Seek/Write dir_temp_buffer in pos : dir_tmp.CHUNK_POINTER + CHUNK_size
+
+				_ Edit header :
+
+					♠ DIRECTORIES_NUM + 1
+
+					♠ Calc new DIRECTORY_POINTER += CHUNK_size
+
+					♠ Write new header to The Bank File
+
+				_ Destroy : header , dir_tmp , dir_tmp_buffer 
+
+				_ Close file 
+
+			- Delete :
+
+				◘ VARS :  tmp_buff1 , tmp_buff2 , tmp_buff3 , buff1_size , buff2_size , buff2_begin , buff2_end
+
+				_ Get Dir_to_delete , Dir_pos
+				
+				_ Open The Bank File 
+
+				_ Read first 10 bytes to header struct 
+
+				_ Check if bank is legit ( Version / Type )
+
+				_ Create TMP Bank File 
+				
+				_ Calc buff1_size = Dir_to_delete.CHUNK_POINTER - sizeof(HEADER)
+
+				_ Alloc tmp_bff1[buff1_size]
+
+				_ Seek/Read from pos : sizeof(HEADER) to pos : buff1_size - 1 to tmp_bff1
+			
+				_ Edit header:
+
+					♠ Calc DIRECTORIES_NUM -= 1 
+
+					♠ Calc DIRECTORY_POINTER -= Dir_to_delete.CHUNK_SIZE
+
+				_ Seek/Write in pos : 0 header - to TMP Bank File 
+
+				_ Seek/Write in pos : sizeof(HEADER) tmp_buff1 - TMP Bank File 
+
+				_ Delete tmp_buff1
+
+				_ Calc buff2_begin =  Dir_to_delete.CHUNK_POINTER +  Dir_to_delete.CHUNK_SIZE
+
+				_ Calc buff2_end = header.DIRECTORY_POINTER + ( Dir_pos  * sizeof(DIRECTORY) )
+
+				_ Calc buff2_size = buff2_end - buff2_begind
+
+				_ Alloc tmp_buff2[buff2_size] 
+
+				_ Seek/Read from pos : buff2_begin to pos : buff2_end - 1 into tmp_buff2
+
+				_ Seek/Write in post : sizeof(HEADER) + buff1_size - 1 - TMP Bank File 
+
+				_ Delete tmp_buff2
+
+				_ IF Dir_pos != ( header.DIRECTORIES_NUM - 1 )  ### Check if isn't the last directory
+					
+					♠ TRUE : 
+						
+						♣ Calc buff3_end = Seek end of the file and do ftell
+
+						♣ Calc buff3_begin = buff2_end + sizeof(DIRECTORY)
+
+						♣ Alloc tmp_buff3[buff3_end - buff3_begin]
+
+						♣ Seek/Read from pos : buff3_begin to pos : buff_end into tmp_buff3
+
+						♣ Seek/Write in pos : sizeof(HEADER) + buff1_size + buff2_size - 1 - TMP Bank File
+			
+						♠ Delete tmp_buff3
+
+				_ Delete header
+
+				_ Close both files 
+
+				_ Delete  The Bank File 
+
+				_ Rename TMP Bank File to The Bank File
+
