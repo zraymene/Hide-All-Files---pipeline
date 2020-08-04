@@ -9,8 +9,7 @@
  * FILE: class_huf.cpp
  *
  * DECRP:
- *	- Functions difintions
- *  - tiny error handling system
+ *	- Functions defintions
  *
  */
 
@@ -39,7 +38,7 @@ bool HUF_Bank::Init(const char* file_name)
 		return false;
 	}
 
-	printf("HUF Bankk %s : Loaded !\n");
+	printf("HUF Bank %s : Loaded ! - %i \n",this->file_name , HUF_GetExcutionTime());
 
 	return true;
 }
@@ -47,7 +46,7 @@ bool HUF_Bank::Init(const char* file_name)
 bool HUF_Bank::Add(
 					const char* name,
 					char*		buffer,
-					int			buffer_size
+					size_t		buffer_size
 				  )
 {
 	if (!HUF_AddChunk(
@@ -60,13 +59,18 @@ bool HUF_Bank::Add(
 		return false;
 	}
 
+	printf("HUF Bank %s : Chunk %s Added ! - %i \n",
+		this->file_name,
+		name,
+		HUF_GetExcutionTime());
+
 	return true;
 }
 
 bool HUF_Bank::Get(
 					const char* dir_name,
 					char* out_buffer,
-					int* out_buffer_size
+					size_t* out_buffer_size
 				  )
 {
 	if (!HUF_LoadChunk(
@@ -78,6 +82,11 @@ bool HUF_Bank::Get(
 		this->M_DisplayError();
 		return false;
 	}
+
+	printf("HUF Bank %s : Chunk %s Loaded ! - %i \n",
+		this->file_name,
+		dir_name,
+		HUF_GetExcutionTime());
 
 	return true;
 }
@@ -93,6 +102,11 @@ bool HUF_Bank::Remove(const char* desired_dir_name)
 		this->M_DisplayError();
 		return false;
 	}
+
+	printf("HUF Bank %s : Chunk %s Removed ! - %i \n",
+		this->file_name,
+		desired_dir_name,
+		HUF_GetExcutionTime());
 
 	return true;
 }

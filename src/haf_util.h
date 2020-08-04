@@ -23,18 +23,18 @@
 typedef struct 
 {
 
-	int  dirs_num;
-	int  dirs_pointer;
-	char bank_type[2];
-	char bank_version;
+	size_t  dirs_num;
+	size_t  dirs_pointer;
+	char	bank_type[2];
+	char	bank_version;
 
 } header_t;
 
 typedef struct
 {
-	int  chunk_pointer;
-	int  chunk_size;
-	char chunk_name[8];
+	size_t  chunk_pointer;
+	size_t  chunk_size;
+	char    chunk_name[8];
 
 } directory_t;
 
@@ -53,7 +53,7 @@ bool HUF_LoadHeader    (
 bool HUF_LoadDirsTable ( 
 							const char*  filename,
 							directory_t* out_dirs_table,
-							long*         toatl_chunk_size
+							size_t*      toatl_chunk_size
 						);
 /*void HUF_LoadDirsTable (const char* filename, header_t* out_header 
 						 , directory_t* out_dirs_table);
@@ -63,13 +63,13 @@ bool HUF_LoadDirsTable (
 bool HUF_LoadChunk     (
 							const char* filename,         header_t*    header ,
 							const char* chunk_name,       directory_t* dirs_table,
-							char*       out_chunk_buffer, int*         out_chunk_size
+							char*       out_chunk_buffer, size_t*         out_chunk_size
 					   );
 
 bool HUF_AddChunk      (
 							const char* filename,   header_t* header, 
 							const char* chunk_name, char *    chunk_buffer, 
-							int         chunk_size, directory_t* dirs_table
+							size_t         chunk_size, directory_t* dirs_table
 					   );
 
 bool HUF_DeleteChunk   (
@@ -80,5 +80,6 @@ bool HUF_DeleteChunk   (
 // Return latest Error 
 const char* HUF_GetError();
 
-// Make sure you call this before exisitng or you will get memory leak !
-void		HUF_Exit();						
+// Return lastest operation execution time (ms)
+long HUF_GetExcutionTime();
+			

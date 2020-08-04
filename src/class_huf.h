@@ -31,7 +31,7 @@ class HUF_Bank
 		bool Add(
 					const char* name,
 					char* buffer,
-					int			buffer_size
+					size_t			buffer_size
 				);
 		// Get data from The bank
 		// Return true on success , false on failure
@@ -39,7 +39,7 @@ class HUF_Bank
 		bool Get( 
 					const char* dir_name,
 					char*       out_buffer,
-					int*        out_buffer_size
+					size_t*     out_buffer_size
 				);
 
 		// Remove data from the file
@@ -53,14 +53,14 @@ class HUF_Bank
 
 		void M_DisplayError();
 
-		const char*		file_name;			
+		const char* file_name        = nullptr;
 
 		// Holds bank header
-		header_t*		m_header;			
+		header_t*		m_header     = nullptr;			
 		// Directories table
-		directory_t*	m_dirs_table;		
+		directory_t*	m_dirs_table = nullptr;		
 
 		// Size of all chunks in bytes
-		long			chunks_size;		
+		size_t			chunks_size  = 0;		
 
 };
