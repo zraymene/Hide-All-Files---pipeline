@@ -56,7 +56,6 @@ bool M_FetchDirectory(directory_t* dir_table, int size , const char* wanted_dir_
 // Opens and loades the header file
 //
 // TODO:
-//	- Add test if header already exist
 //  - Check file opening permissions (w , r, ...) if it rewrite 
 //    exisintg file or something 
 //
@@ -65,16 +64,17 @@ bool HUF_LoadHeader(const char* filename, header_t** out_header , std::FILE ** o
 
 	if ((*out_file = std::fopen(filename, "r")) == nullptr)
 	{
-		M_PushError("HUF Error : Can't open The Bank File !\n");
+		M_PushError("HUF Error : Can't open The Bank File !");
 		return false;
 	}
 
-	*out_header = new header_t();
+	if(*out_header == nullptr)
+		*out_header = new header_t();
 
 	// Read The Bank header in header_t struct
 	if( std::fread(*out_header, sizeof(header_t), 1, *out_file) == 0 )
 	{
-		M_PushError("HUF Error : Error while reading Bank header !\n");
+		M_PushError("HUF Error : Error while reading Bank header !");
 		return false;
 	}
 
@@ -107,13 +107,13 @@ bool HUF_LoadDirsTable(const char* filename, directory_t* out_dirs_table , long*
 						(i * sizeof(directory_t)) + header->dirs_pointer,
 			            SEEK_SET) != 0)
 		{
-			M_PushError("HUF Error : Can't seek to directories position !\n");
+			M_PushError("HUF Error : Can't seek to directories position !");
 			return false;
 		}
 
 		if (std::fread(&out_dirs_table[i], sizeof(directory_t), 1, file) == 0)
 		{
-			M_PushError("HUF Error : Can't read directories !\n");
+			M_PushError("HUF Error : Can't read directories !");
 			return false;
 		}
 
@@ -151,7 +151,7 @@ bool HUF_LoadChunk(
 
 	if (!M_FetchDirectory(dirs_table, header->dirs_num, wanted_chunk_name , &dir_wanted , nullptr))
 	{
-		M_PushError("HUF Error : Can't find desired chunk/directory !\n");
+		M_PushError("HUF Error : Can't find desired chunk/directory !");
 		return false;
 	}
 
@@ -160,13 +160,13 @@ bool HUF_LoadChunk(
 
 	if (std::fseek(file, dir_wanted->chunk_pointer, SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error : Can't seek to chunk position !\n");
+		M_PushError("HUF Error : Can't seek to chunk position !");
 		return false;
 	}
 
 	if (fread(out_chunk_buffer, dir_wanted->chunk_size, 1, file) == 0)
 	{
-		M_PushError("HUF Error : Can't read chunk position !\n");
+		M_PushError("HUF Error : Can't read chunk position !");
 		return false;
 	}
 
@@ -198,7 +198,7 @@ bool HUF_AddChunk(
 	// Look if directory with same name but we don't need any return value !
 	if (M_FetchDirectory(dirs_table, header->dirs_num, chunk_name, nullptr , nullptr))
 	{
-		M_PushError("HUF Error : Chunk with same name already exists ! !\n");
+		M_PushError("HUF Error : Chunk with same name already exists ! !");
 		return false;
 	}
 
@@ -231,13 +231,13 @@ bool HUF_AddChunk(
 	//###################################################
 	if (std::fseek(file, dir_tmp->chunk_pointer, SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error : Can't seek to new chunk position !\n");
+		M_PushError("HUF Error : Can't seek to new chunk position !");
 		return false;
 	}
 	// Write the new chunk !
 	if (std::fwrite(chunk_buffer, chunk_size, 1, file) <= 0)
 	{
-		M_PushError("HUF Error : Error while writing new chunk ! !\n");
+		M_PushError("HUF Error : Error while writing new chunk ! !");
 		return false;
 	}
 
@@ -246,13 +246,13 @@ bool HUF_AddChunk(
 	//#####################################################
 	if (std::fseek(file, dir_tmp->chunk_pointer + ( dir_tmp->chunk_size - 1) , SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error : Can't seek to new directories table position !\n");
+		M_PushError("HUF Error : Can't seek to new directories table position !");
 		return false;
 	}
 	// Write the new table !
 	if (std::fwrite(dirs_tmp_buffer, dirs_tmp_buff_size,  (header->dirs_num) + 1, file) <= 0)
 	{
-		M_PushError("HUF Error : Error while writing new table ! !\n");
+		M_PushError("HUF Error : Error while writing new table ! !");
 		return false;
 	}
 
@@ -264,13 +264,13 @@ bool HUF_AddChunk(
 	// Go to the begining !
 	if (std::fseek(file, 0, SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error : Can't seek to the header positon !\n");
+		M_PushError("HUF Error : Can't seek to the header positon !");
 		return false;
 	}
 	// Now overwrite !
 	if (std::fwrite(header, sizeof(header_t) , 1, file) <= 0)
 	{
-		M_PushError("HUF Error : Error while writing new header ! !\n");
+		M_PushError("HUF Error : Error while writing new header ! !");
 		return false;
 	}
 
@@ -302,7 +302,7 @@ bool HUF_DeleteChunk(
 	// Look if directory exists !
 	if (!M_FetchDirectory(dirs_table, header->dirs_num, chunk_name, nullptr , &wanted_dir_pos))
 	{
-		M_PushError("HUF Error : Chunk desired to delete doesn't exists ! !\n");
+		M_PushError("HUF Error : Chunk desired to delete doesn't exists ! !");
 		return false;
 	}
 
@@ -317,13 +317,13 @@ bool HUF_DeleteChunk(
 	// No seek to end of header part 
 	if (std::fseek(file, sizeof(header_t) , SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error - Delete : Can't seek to the end of header part !\n");
+		M_PushError("HUF Error - Delete : Can't seek to the end of header part !");
 		return false;
 	}
 	// Read until start of desired chunk !
 	if (fread(buff1 , sizeof(char) , buff1_size , file) == 0)
 	{
-		M_PushError("HUF Error - Delete : Can't read chunks to buffer1 !\n");
+		M_PushError("HUF Error - Delete : Can't read chunks to buffer1 !");
 		return false;
 	}
 
@@ -340,13 +340,13 @@ bool HUF_DeleteChunk(
 	// Now seek to end of header part 
 	if (std::fseek(file, buff2_begin , SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error - Delete : Can't seek to the end of desired chunk  !\n");
+		M_PushError("HUF Error - Delete : Can't seek to the end of desired chunk  !");
 		return false;
 	}
 	// Read until start of desired chunk directory !
 	if (fread(buff2, sizeof(char), buff2_size, file) == 0)
 	{
-		M_PushError("HUF Error - Delete : Can't read chunks to buffer2 !\n");
+		M_PushError("HUF Error - Delete : Can't read chunks to buffer2 !");
 		return false;
 	}
 	
@@ -360,7 +360,7 @@ bool HUF_DeleteChunk(
 
 	if ( (file2 = std::fopen(tmp_file_name, "w")) == nullptr)
 	{
-		M_PushError("HUF Error - Delete : Can't open temporary bank file !\n");
+		M_PushError("HUF Error - Delete : Can't open temporary bank file !");
 		return false;
 	}
 
@@ -369,13 +369,13 @@ bool HUF_DeleteChunk(
 	//-----------------------------------------------------
 	/*if (std::fseek(file2, 0, SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error - Delete : Can't seek to the start of file!\n");
+		M_PushError("HUF Error - Delete : Can't seek to the start of file!");
 		return false;
 	}
 	*/
 	if (std::fwrite(header, sizeof(header_t), 1, file2) <= 0)
 	{
-		M_PushError("HUF Error - Delete : Can't write header to new bank file!\n");
+		M_PushError("HUF Error - Delete : Can't write header to new bank file!");
 		return false;
 	}
 
@@ -384,13 +384,13 @@ bool HUF_DeleteChunk(
 	//-----------------------------------------------------
 	/*if (std::fseek(file2, sizeof(header_t) , buff1_size , SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!\n");
+		M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!");
 		return false;
 	}
 	*/
 	if (std::fwrite(buff1, sizeof(char), buff1_size, file2) <= 0)
 	{
-		M_PushError("HUF Error - Delete : Can't write first buffer - writing to TMP!\n");
+		M_PushError("HUF Error - Delete : Can't write first buffer - writing to TMP!");
 		return false;
 	}
 	delete[] buff1;
@@ -400,13 +400,13 @@ bool HUF_DeleteChunk(
 	//-----------------------------------------------------
 	/*if (std::fseek(file2, sizeof(header_t) + buff1_size - 1, buff2_size , SEEK_SET) != 0)
 	{
-		M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!\n");
+		M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!");
 		return false;
 	}
 	*/
 	if (std::fwrite(buff2, sizeof(char), buff2_size, file2) <= 0)
 	{
-		M_PushError("HUF Error - Delete : Can't write second buffer - writing to TMP!\n");
+		M_PushError("HUF Error - Delete : Can't write second buffer - writing to TMP!");
 		return false;
 	}
 	delete[] buff2;
@@ -420,7 +420,7 @@ bool HUF_DeleteChunk(
 
 		if (std::fseek(file2, 0, SEEK_SET) != 0)
 		{
-			M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!\n");
+			M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!");
 			return false;
 		}
 
@@ -434,13 +434,13 @@ bool HUF_DeleteChunk(
 		// Seek to end of desired chunk directory
 		if (std::fseek(file, buff2_begin, SEEK_SET) != 0)
 		{
-			M_PushError("HUF Error - Delete : Can't seek to the end of desired chunk directory !\n");
+			M_PushError("HUF Error - Delete : Can't seek to the end of desired chunk directory !");
 			return false;
 		}
 		// Read until start of desired chunk directory !
 		if (fread(buff3, sizeof(char), buff3_size, file) == 0)
 		{
-			M_PushError("HUF Error - Delete : Can't read chunks to buffer3 !\n");
+			M_PushError("HUF Error - Delete : Can't read chunks to buffer3 !");
 			return false;
 		}
 
@@ -449,13 +449,13 @@ bool HUF_DeleteChunk(
 		//-----------------------------------------------------
 		/*if (std::fseek(file2, sizeof(header_t) + buff1_size - 1, buff2_size , SEEK_SET) != 0)
 		{
-			M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!\n");
+			M_PushError("HUF Error - Delete : Can't seek to the end of header - writing to TMP!");
 			return false;
 		}
 		*/
 		if (std::fwrite(buff3, sizeof(char), buff3_size, file2) <= 0)
 		{
-			M_PushError("HUF Error - Delete : Can't write third buffer - writing to TMP!\n");
+			M_PushError("HUF Error - Delete : Can't write third buffer - writing to TMP!");
 			return false;
 		}
 
