@@ -26,19 +26,25 @@ bool HUF_Bank::Init(const char* file_name)
 	this->file_name = file_name;
 	this->chunks_size = 0;
 	
-	if (!HUF_LoadHeader(file_name, &this->m_header, nullptr))
+	if (!HUF_LoadHeader(file_name, &this->m_header))
 	{
 		this->M_DisplayError();
 		return false;
 	}
 
-	if (!HUF_LoadDirsTable(this->file_name, this->m_dirs_table, &this->chunks_size))
+	if (!HUF_LoadDirsTable(this->file_name, this->m_header, &this->m_dirs_table, &this->chunks_size))
 	{
 		this->M_DisplayError();
 		return false;
 	}
 
-	printf("HUF Bank %s : Loaded ! - %i \n",this->file_name , HUF_GetExcutionTime());
+
+
+	printf("HUF Bank %s : Loaded ! - %d \n",this->file_name , HUF_GetExcutionTime());
+
+	printf("Directories Type : %s \nDirectories Version : %d \nDirectories Number : %d\nDirectories Pointer : %x\n\n",
+		this->m_header->bank_type, this->m_header->bank_version,
+		this->m_header->dirs_num, this->m_header->dirs_pointer);
 
 	return true;
 }
@@ -46,13 +52,13 @@ bool HUF_Bank::Init(const char* file_name)
 bool HUF_Bank::Add(
 					const char* name,
 					char*		buffer,
-					size_t		buffer_size
+					uint32_t		buffer_size
 				  )
 {
 	if (!HUF_AddChunk(
 			this->file_name, this->m_header,
 			name           , buffer,
-			buffer_size    , this->m_dirs_table
+			buffer_size    , &this->m_dirs_table
 	))
 	{
 		this->M_DisplayError();
@@ -70,7 +76,7 @@ bool HUF_Bank::Add(
 bool HUF_Bank::Get(
 					const char* dir_name,
 					char* out_buffer,
-					size_t* out_buffer_size
+					uint32_t* out_buffer_size
 				  )
 {
 	if (!HUF_LoadChunk(
@@ -109,6 +115,16 @@ bool HUF_Bank::Remove(const char* desired_dir_name)
 		HUF_GetExcutionTime());
 
 	return true;
+}
+
+void HUF_Bank::PrintDirectories()
+{
+
+	for (int i = 0; i < this->m_header->dirs_num; i++)
+	{
+		printf("File : %s , Size : %d Byte.\n", (this->m_dirs_table + i)->chunk_name, (this->m_dirs_table + i)->chunk_size);
+	}
+	printf("\0");
 }
 
 void HUF_Bank::Destory()

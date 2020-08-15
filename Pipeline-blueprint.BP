@@ -36,13 +36,13 @@ Solution:
 
 				 Or you will get bunch of bytes that represent nothing !
 
-		• DIRECTORY (16 bytes) :
+		• DIRECTORY (18 bytes) :
 
 			- CHUNK_POINTER ( 4 bytes unsigned int ) ( Pointer to content position )
 
 			- CHUNK_SIZE ( 4 bytes unsgined int ) ( Size of the CHUNK in bytes )
 
-			- CHUNK_NAME ( 8 bytes ASCII ) ( Must ends with '\0' if less then 8 bytes)
+			- CHUNK_NAME ( 10 bytes ASCII ) ( Must ends with '\0' if less then 10 bytes)
 
 		Notes:
 

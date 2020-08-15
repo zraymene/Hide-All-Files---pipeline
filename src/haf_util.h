@@ -16,44 +16,43 @@
 #pragma once
 
 #include <cstdio>
-
+#include <cstdint>
 //
 //	TYPES
 //
 typedef struct 
 {
-
-	size_t  dirs_num;
-	size_t  dirs_pointer;
+	uint32_t  dirs_num;
+	uint32_t  dirs_pointer;
 	char	bank_type[2];
 	char	bank_version;
-
 } header_t;
 
 typedef struct
 {
-	size_t  chunk_pointer;
-	size_t  chunk_size;
-	char    chunk_name[8];
-
+	uint32_t  chunk_pointer;
+	uint32_t  chunk_size;
+	char    chunk_name[10];
 } directory_t;
 
 //
 //	FUNCTIONS
 //
 
+// Create an empty bank file
+FILE* HUF_CreateEmpty   ( const char* filename, header_t** out_header );
+
 // Load header from The Bank File to our_header 
+// IF bank doesn't exist create new empety one an return new header object
 bool HUF_LoadHeader    ( 
-							const char* filename, 
-							header_t**   out_header,
-							std::FILE**        out_file
+							const char*  filename, 
+							header_t**   out_header
 						);
 
 // Load all Chunk Directories into a table (array) out_dir_table
 bool HUF_LoadDirsTable ( 
-							const char*  filename,
-							directory_t* out_dirs_table,
-							size_t*      toatl_chunk_size
+							const char*   filename,       header_t*		 header,
+							directory_t** out_dirs_table, uint32_t*      toatl_chunk_size
 						);
 /*void HUF_LoadDirsTable (const char* filename, header_t* out_header 
 						 , directory_t* out_dirs_table);
@@ -63,13 +62,13 @@ bool HUF_LoadDirsTable (
 bool HUF_LoadChunk     (
 							const char* filename,         header_t*    header ,
 							const char* chunk_name,       directory_t* dirs_table,
-							char*       out_chunk_buffer, size_t*         out_chunk_size
+							char*       out_chunk_buffer, uint32_t*         out_chunk_size
 					   );
 
 bool HUF_AddChunk      (
-							const char* filename,   header_t* header, 
-							const char* chunk_name, char *    chunk_buffer, 
-							size_t         chunk_size, directory_t* dirs_table
+							const char* filename,   header_t*	 header, 
+							const char* chunk_name, char *		 chunk_buffer, 
+							uint32_t      chunk_size, directory_t** dirs_table
 					   );
 
 bool HUF_DeleteChunk   (
